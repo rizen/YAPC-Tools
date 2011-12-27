@@ -1,0 +1,26 @@
+# config-file-type: JSON 1
+{
+    "rss_uri" : "http://blog.yapcna.org/rss",
+    "moveable_type" : {
+        "api_uri" : "http://blogs.perl.org/users/your mt username/rsd.xml",
+        "username" : "your mt username",
+        "password" : "your mt web services password",
+        "blog_id" : "your mt blog id"
+    },
+    "enable" : {
+        "moveable_type" : 1,
+        "mailing_list" : 1,
+        "most_recent_only" : 0  # good for initial post, or after cache reset
+    },
+    "mailing_list" : {
+        "to" : "\"YAPC::NA\" <yapc@pm.org>",
+        "from" : "\"YAPC::NA Director\" <admin@yapcna.org>"
+    },
+    "smtp" : {
+        "host" : "smtp.somemailserver.com",
+        "port" : 25,
+        "timeout" : 30,
+        "sasl_username" : "user@somemailserver.com",
+        "sasl_password" : "password for user@somemailserver.com"
+    }
+}
