@@ -20,8 +20,8 @@ my $config = Config::JSON->new($config_file);
 
 # do stuff
 my $posts = get_latest_posts();
-post_to_movable_type($posts) if $config->get('enable/movable_type');
 post_to_mailing_list($posts) if $config->get('enable/mailing_list');
+post_to_movable_type($posts) if $config->get('enable/movable_type');
 
 # functions 
 sub post_to_mailing_list {
