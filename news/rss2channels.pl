@@ -28,11 +28,6 @@ sub post_to_mailing_list {
   my $posts = shift;
   my $transport = Email::Sender::Transport::SMTP->new($config->get('smtp'));
   foreach my $post (@{$posts}) {
-     my $message = $post->{description}.q{
-
-         <p>From the <a href="http://blog.yapcna.org">YAPC::NA Blog</a>.</p>
-
-     };
      my $email = Email::MIME->create_html(
          header => [
              To      => $config->get('mailing_list/to'),
@@ -40,7 +35,7 @@ sub post_to_mailing_list {
              Subject => $post->{title},
          ],
          attributes => { charset => "utf8" },
-         body      => $message,
+         body      => $post->{description},
          text_body => HTML::FormatText::Html2text->format_string($message),
      );
      Email::Sender::Simple->send($email, { transport => $transport });
@@ -73,9 +68,15 @@ sub get_latest_posts {
     last if ($latest eq $item->guid); # stop fetching entries once we've got the latest
     my $id = $item->guid;
     $id =~ s{http://blog.yapcna.org/post/(\d+)}{$1}xms;
+    my $description = $item->description.q{
+
+         <p>[From the <a href="http://blog.yapcna.org">YAPC::NA Blog</a>.]</p>
+
+    };
+    $description =~ s/\o{342}\o{200}\o{231}/'/gs; # fix for stylized quotes
     push @entries, {
       title		=> $item->title,
-      description       => $item->description, # . '<p><a href="'.$item->link.'">Originally Posted on the YAPC::NA Blog</a></p>',
+      description       => $description,
       mt_tb_ping_urls	=> ['http://disqus.com/forums/yapcnablog/httpblogyapcnaorgpost'.$id.'/trackback/'],
       mt_convert_breaks => 0,
       mt_keywords => ['yapc::na','yapc','conferences','yapcna2012'],
