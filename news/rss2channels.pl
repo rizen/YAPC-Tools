@@ -79,7 +79,7 @@ sub get_latest_posts {
       description       => $description,
       mt_tb_ping_urls	=> ['http://disqus.com/forums/yapcnablog/httpblogyapcnaorgpost'.$id.'/trackback/'],
       mt_convert_breaks => 0,
-      mt_keywords => ['yapc::na','yapc','conferences','yapcna2012'],
+      mt_keywords => 'yapc::na, yapc, conferences, yapcna2012',
     };
   }
 
