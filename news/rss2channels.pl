@@ -34,8 +34,9 @@ sub post_to_mailing_list {
              From    => $config->get('mailing_list/from'),
              Subject => $post->{title},
          ],
-         attributes => { charset => "utf8" },
          body      => $post->{description},
+         body_attributes      => { charset => 'utf-8' },
+         text_body_attributes => { charset => 'utf-8' },
          text_body => HTML::FormatText::Html2text->format_string($post->{description}),
      );
      Email::Sender::Simple->send($email, { transport => $transport });
@@ -73,7 +74,7 @@ sub get_latest_posts {
          <p>[From the <a href="http://blog.yapcna.org">YAPC::NA Blog</a>.]</p>
 
     };
-    $description =~ s/\o{342}\o{200}\o{231}/'/gs; # fix for stylized quotes
+    #$description =~ s/\o{342}\o{200}\o{231}/'/gs; # fix for stylized quotes
     push @entries, {
       title		=> $item->title,
       description       => $description,
