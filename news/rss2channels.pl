@@ -13,7 +13,7 @@ use CHI;
 use Getopt::Long;
 
 # cli options
-GetOptions( "config=s" => \my $config_file );
+GetOptions( "config=s" => \my $config_file, "verbose" => \my $verbose );
 
 # config
 my $config = Config::JSON->new($config_file);
@@ -25,9 +25,11 @@ post_to_movable_type($posts) if $config->get('enable/movable_type');
 
 # functions 
 sub post_to_mailing_list {
+  say "Posting to mailing list..." if $verbose;
   my $posts = shift;
   my $transport = Email::Sender::Transport::SMTP->new($config->get('smtp'));
   foreach my $post (@{$posts}) {
+    say "\t".$post->{title} if $verbose;
      my $email = Email::MIME->create_html(
          header => [
              To      => $config->get('mailing_list/to'),
@@ -45,24 +47,28 @@ sub post_to_mailing_list {
 }
 
 sub post_to_movable_type {
+  say "Posting to Movable Type..." if $verbose;
   my $posts = shift;
   my $movable_type = Net::MovableType->new($config->get('movable_type/api_uri'));
   $movable_type->username($config->get('movable_type/username'));
   $movable_type->password($config->get('movable_type/password'));
   $movable_type->blogId($config->get('movable_type/blog_id'));
   foreach my $post (@{$posts}) {
+    say "\t".$post->{title} if $verbose;
     $movable_type->newPost($post,1);
     last if $config->get('enable/most_recent_only');
   }
 }
 
 sub get_latest_posts {
+  say "Fetching feed..." if $verbose;
   my $cache = CHI->new( driver => 'File', root_dir => '/tmp/rss2channels');
   my $latest = $cache->get('latest_entry_guid');
   my $feed = XML::FeedPP->new( $config->get('rss_uri') );
   my @entries;
 
   foreach my $item ( $feed->get_item() ) {
+    say "\t".$item->title.' - '.$item->guid if $verbose;
     if (scalar @entries == 0) { # cache the first item fetched
       $cache->set('latest_entry_guid', $item->guid);
     }
