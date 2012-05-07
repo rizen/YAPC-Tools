@@ -3,6 +3,8 @@ use 5.010;
 use LWP::UserAgent;
 use HTTP::Request::Common;
 use JSON;
+use URI;
+use Data::Printer;
 
 # create session
 my $session = post('session',[
@@ -13,34 +15,27 @@ my $session = post('session',[
 
 # get user
 my $user = get('user/'.$session->{user_id},[
-    session_id  => $session->{id}
+    session_id  => $session->{id},
     include_related_objects => 1,
 ]);
 
-
 # create folder
-my $folder = post('folder'
-$response = LWP::UserAgent->new->request( POST 'https://www.thegamecrafter.com/api/folder', [
+my $folder = post('folder',[
     name        => 'YAPC Badges',
-    session_id  => $session->{result}{id},
-    user_id     => $session->{result}{user_id},
+    session_id  => $session->{id},
+    user_id     => $user->{id},
+    parent_id   => $user->{root_folder}{id},
 ]);
-my $folder = from_json($response->decoded_content); 
-if ($response->is_success) {
-   say 'Folder ID: ', $folder->{result}{id};
-}
-else {
-   say 'Error: ', $folder->{error}{message};
-}
-
 
 
 sub get {
     my ($path, $params) = @_;
-    my $response = LWP::UserAgent->new->request( GET 'https://www.thegamecrafter.com/api/'.$path, $params );
+    my $uri = URI->new('https://www.thegamecrafter.com/api/'.$path);
+    $uri->query_form($params);
+    my $response = LWP::UserAgent->new->request( GET $uri->as_string);
     my $result = from_json($response->decoded_content); 
     if ($response->is_success) {
-        say $self-' ID: ', $result->{result}{id};
+        say $result->{result}{object_name}.' ID: ', $result->{result}{id};
         return $result->{result};
     }
     else {
@@ -53,11 +48,11 @@ sub post {
     my $response = LWP::UserAgent->new->request( POST 'https://www.thegamecrafter.com/api/'.$path, $params );
     my $result = from_json($response->decoded_content); 
     if ($response->is_success) {
-        say $path.' ID: ', $result->{result}{id};
+        say $result->{result}{object_name}.' ID: ', $result->{result}{id};
         return $result->{result};
     }
     else {
-        die 'Error: ', $folder->{error}{message};
+        die 'Error: '. $response->status_line. ' '. $folder->{error}{message};
     }
 }
 
