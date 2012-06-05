@@ -56,8 +56,8 @@ sub make_back {
         say $badge->Annotate(text => $reg->{url}, font => 'Garamond.ttf', x => 500, y => 350, fill => 'white', pointsize => '50');
         say $badge->Annotate(text => $reg->{town}.'  ['.uc($reg->{country}).']', font => 'Garamond.ttf', x => 500, y => 400, fill => 'white', pointsize => '50');
     }
-    say $badge->Annotate(text => 'WiFi SSID: UW WiFi     Net-ID: '.$reg->{netid}.'     Password: '.$reg->{password}, x => 150, y => 725, fill => 'white', pointsize => '25', font => 'Arial.ttf');
-    say $badge->Rotate(90);
+    say $badge->Annotate(text => 'WiFi SSID: UWNet     Net-ID: '.$reg->{netid}.'     Password: '.$reg->{password}, x => 150, y => 725, fill => 'white', pointsize => '25', font => 'Arial.ttf');
+    say $badge->Rotate(270);
     say $badge->Write($out_path.'/back-'.$reg->{id}.'.png');
 }
 
@@ -65,13 +65,13 @@ sub make_face {
     my $reg = shift;
     my $badge = Image::Magick->new(size=>'1125x825');
     say $badge->ReadImage('canvas:#b70101');
-    say $badge->Composite(compose => 'over', image => $logo, x => 500, y => 120);
+    say $badge->Composite(compose => 'over', image => $logo, x => 650, y => 250);
     if ($reg->{first} eq '' && $reg->{last} eq '') {
-        say $badge->Draw(stroke=>'black', fill => 'white', strokewidth=>3, primitive=>'rectangle', points=>'75,75 475,400');
+        say $badge->Draw(stroke=>'black', fill => 'white', strokewidth=>3, primitive=>'rectangle', points=>'75,75 575,450');
     }
     else {
-        say $badge->Annotate(text => $reg->{first}, font => 'Garamond.ttf', x => 75, y => 200, fill => 'white', pointsize => '100');
-        say $badge->Annotate(text => $reg->{last}, font => 'Garamond.ttf', x => 75, y => 300, fill => 'white', pointsize => '70');
+        say $badge->Annotate(text => $reg->{first}, font => 'Garamond.ttf', x => 75, y => 200, fill => 'white', pointsize => '170');
+        say $badge->Annotate(text => $reg->{last}, font => 'Garamond.ttf', x => 75, y => 300, fill => 'white', pointsize => '90');
     }
     say $badge->Annotate(text => 'Guest of the Community', font => 'Garamond.ttf', x => 125, y => 570, fill => 'white', pointsize => '30') if $reg->{subsidized};
     say $badge->Annotate(text => 'Staff', font => 'Garamond.ttf', x => 125, y => 600, fill => 'white', pointsize => '30') if $reg->{staff};
