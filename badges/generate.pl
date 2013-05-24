@@ -15,7 +15,9 @@ remove_tree($out_path);
 make_path($out_path);
 my $logo = Image::Magick->new;
 say $logo->ReadImage('logo.png');
-my @cols = (qw(first last email company url town country vip fop staff z2p tw subsidized speaker spouses netid password));
+my @cols = (qw(user_id login email salutation first last nick pseudonymous country town pm_group has_talk has_paid rights tshirt_size nb_family datetime));
+my $ssid = 'attwifi';
+my $password = 'WP3E-i8WM-iD';
 
 
 # read registrants
@@ -30,68 +32,70 @@ while (my @row = @{$csv->getline($fh)}) {
         $first = 0;
         next;
     }
-    say $i;
     my %registrant = zip @cols, @row;
+    next unless $registrant{has_paid} || $registrant{has_talk};
+    say $i;
     $registrant{id} = $i;
     my $vcard = make_vcard(\%registrant);
     my $qrcode = make_qrcode($vcard);
-    make_face(\%registrant);
-    make_back(\%registrant, $qrcode);
+    make_badge(\%registrant, $qrcode);
     $i++;
 }
 close $fh;
 
 
-sub make_back {
+sub make_badge {
     my ($reg, $qrpath) = @_;
     my $badge = Image::Magick->new(size=>'1125x825');
-    say $badge->ReadImage('canvas:#b70101');
-    unless ($reg->{first} eq '' && $reg->{last} eq '') {
-        my $qrcode = Image::Magick->new;
-        $qrcode->ReadImage($qrpath);
-        say $badge->Composite(compose => 'over', image => $qrcode, x => 75, y => 160);
-        say $badge->Annotate(text => $reg->{first}.' '.$reg->{last}, font => 'Garamond.ttf', x => 500, y => 200, fill => 'white', pointsize => '50');
-        say $badge->Annotate(text => $reg->{email}, font => 'Garamond.ttf', x => 500, y => 250, fill => 'white', pointsize => '50');
-        say $badge->Annotate(text => $reg->{company}, font => 'Garamond.ttf', x => 500, y => 300, fill => 'white', pointsize => '50');
-        say $badge->Annotate(text => $reg->{url}, font => 'Garamond.ttf', x => 500, y => 350, fill => 'white', pointsize => '50');
-        say $badge->Annotate(text => $reg->{town}.'  ['.uc($reg->{country}).']', font => 'Garamond.ttf', x => 500, y => 400, fill => 'white', pointsize => '50');
-    }
-    say $badge->Annotate(text => 'WiFi SSID: UWNet     Net-ID: '.$reg->{netid}.'     Password: '.$reg->{password}, x => 150, y => 725, fill => 'white', pointsize => '25', font => 'Arial.ttf');
-    say $badge->Rotate(270);
-    say $badge->Write($out_path.'/back-'.$reg->{id}.'.png');
-}
-
-sub make_face {
-    my $reg = shift;
-    my $badge = Image::Magick->new(size=>'1125x825');
-    say $badge->ReadImage('canvas:#b70101');
-    say $badge->Composite(compose => 'over', image => $logo, x => 650, y => 250);
+    say $badge->ReadImage('canvas:#333366');
     if ($reg->{first} eq '' && $reg->{last} eq '') {
-        say $badge->Draw(stroke=>'black', fill => 'white', strokewidth=>3, primitive=>'rectangle', points=>'75,75 575,450');
+        say $badge->Draw(stroke=>'black', fill => 'white', strokewidth=>3, primitive=>'rectangle', points=>'75,75 1050,600');
     }
     else {
         say $badge->Annotate(text => $reg->{first}, font => 'Garamond.ttf', x => 75, y => 200, fill => 'white', pointsize => '170');
         say $badge->Annotate(text => $reg->{last}, font => 'Garamond.ttf', x => 75, y => 300, fill => 'white', pointsize => '90');
     }
-    say $badge->Annotate(text => 'Guest of the Community', font => 'Garamond.ttf', x => 125, y => 570, fill => 'white', pointsize => '30') if $reg->{subsidized};
-    say $badge->Annotate(text => 'Staff', font => 'Garamond.ttf', x => 125, y => 600, fill => 'white', pointsize => '30') if $reg->{staff};
-    say $badge->Annotate(text => 'Speaker', font => 'Garamond.ttf', x => 125, y => 630, fill => 'white', pointsize => '30') if $reg->{speaker};
-    say $badge->Annotate(text => 'Zero To Perl', font => 'Garamond.ttf', x => 125, y => 660, fill => 'white', pointsize => '30') if $reg->{z2p};
-    say $badge->Annotate(text => 'Testing Workshop', font => 'Garamond.ttf', x => 125, y => 690, fill => 'white', pointsize => '30') if $reg->{tw};
-    say $badge->Annotate(text => 'Friend of Perl', font => 'Garamond.ttf', x => 125, y => 720, fill => 'white', pointsize => '30') if $reg->{fop};
-    say $badge->Rotate(90);
+    my $label_y = 600;
+    my %labels = (
+     #   subsidized  => 'Guest of the Community',
+     #   staff       => 'Staff',
+        has_talk     => 'Speaker',
+     #   z2p         => 'Zero To Perl',
+     #   fop         => 'Friend of Perl',
+     #   tw          => 'Testing Workshop',
+    );
+    while (my ($key, $label) = each %labels) {
+        if ($reg->{$key}) {
+            say $badge->Annotate(text => $label, font => 'Garamond.ttf', x => 125, y => $label_y, fill => 'orange', pointsize => '30');
+            $label_y += 30;
+        }
+    }
+    say $badge->Annotate(text => 'WiFi SSID: '.$ssid.'     Internet Access Code: '.$password, x => 150, y => 725, fill => 'white', pointsize => '25', font => 'Arial.ttf');
+    unless ($reg->{first} eq '' && $reg->{last} eq '') {
+        my $qrcode = Image::Magick->new;
+        $qrcode->ReadImage($qrpath);
+        say $badge->Annotate(text => $reg->{nick}, font => 'Garamond.ttf', x => 75, y => 375, fill => 'white', pointsize => '50');
+        say $badge->Annotate(text => $reg->{pm_group}, font => 'Garamond.ttf', x => 75, y => 425, fill => 'white', pointsize => '50');
+        say $badge->Annotate(text => $reg->{email}, font => 'Garamond.ttf', x => 75, y => 475, fill => 'white', pointsize => '50');
+        say $badge->Annotate(text => $reg->{town}.'  ['.uc($reg->{country}).']', font => 'Garamond.ttf', x => 75, y => 525, fill => 'white', pointsize => '50');
+        say $badge->Composite(compose => 'over', image => $qrcode, x => 800, y => 260);
+    }
+    #say $badge->Rotate(90);
+    say $badge->Composite(compose => 'over', image => $logo, x => 850, y => 525);
     say $badge->Write($out_path.'/face-'.$reg->{id}.'.png');
+    say $badge->Rotate(180);
+    say $badge->Write($out_path.'/back-'.$reg->{id}.'.png');
 }
 
 sub make_qrcode {
     my $vcard = shift;
     my $qrcode = Imager::QRCode->new(
-        size          => 7,
+        size          => 4,
         margin        => 2,
         version       => 1,
         level         => 'M',
         casesensitive => 1,
-        lightcolor    => Imager::Color->new(183,1,1),
+        lightcolor    => Imager::Color->new(51,51,102),
         darkcolor     => Imager::Color->new(255,255,255),
     );
     my $img = $qrcode->plot($vcard);
@@ -113,12 +117,13 @@ sub make_vcard {
     $name->given($reg->{first});
     $name->family($reg->{last});
     $vcard->add_node({node_type => 'FN'})->value($reg->{first}.' '.$reg->{last});
-    $vcard->add_node({node_type => 'URL'})->value($reg->{url});
+    $vcard->add_node({node_type => 'NICKNAME'})->value($reg->{nick});
+    #$vcard->add_node({node_type => 'URL'})->value($reg->{url});
     #$vcard->add_node({node_type => 'TITLE'})->value($reg->{title});
     #$vcard->add_node({node_type => 'TEL'})->value($phone);
     $vcard->add_node({node_type => 'EMAIL'})->value($reg->{email});
     my $org = $vcard->add_node({node_type => 'ORG'});
-    $org->name($reg->{company});
+    $org->name($reg->{pm_group});
     #$org->unit([$dept]);
     #$vcard->add_node({node_type => 'X-skype'})->value($skype);
     return $address_book->export;
